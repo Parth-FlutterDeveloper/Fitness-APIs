@@ -11,3 +11,12 @@ Route::get('/test', function () {
         'message' => 'API is working 🚀'
     ]);
 });
+
+Route::get('/db-check', function () {
+    try {
+        DB::connection()->getPdo();
+        return "DB Connected ✅";
+    } catch (\Exception $e) {
+        return $e->getMessage();
+    }
+});
