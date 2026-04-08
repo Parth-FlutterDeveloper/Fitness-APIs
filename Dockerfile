@@ -8,17 +8,19 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /app
-
-# Copy project files
 COPY . .
 
-# Install Laravel dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install dependencies
+RUN composer install --no-interaction --no-dev --optimize-autoloader
 
-# Expose port
+# Ensure storage and cache are writable
+RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
+
 EXPOSE 10000
 
-# Start Laravel server + run migration
-CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force || true && php artisan serve --host=0.0.0.0 --port=10000
+# Optimized CMD: Clear cache, then run migrations, then start the server
+CMD php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=10000
