@@ -30,7 +30,7 @@ class Workout extends Model
             return null;
         }
 
-        return asset('storage/' . $this->workout_image);
+        return url(Storage::url($this->workout_image));
     }
 
     // ================== RELATIONSHIPS ==================
