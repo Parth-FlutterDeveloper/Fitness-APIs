@@ -34,7 +34,7 @@ class GeminiService
 
     public function generateWorkout($prompt)
     {
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY');
 
         $response = Http::timeout(30)->post(
             "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={$apiKey}",
@@ -85,7 +85,7 @@ class GeminiService
 
     public function generateDiet($prompt)
     {
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.api_key') ?? env('GEMINI_API_KEY');
 
         // $response = Http::timeout(30)->post(
         //     "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={$apiKey}",
