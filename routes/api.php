@@ -10,13 +10,20 @@ Route::get('/test', function () {
         'status' => true,
         'message' => 'API is working 🚀'
     ]);
-});
+}); 
 
 Route::get('/db-check', function () {
     try {
         DB::connection()->getPdo();
-        return "DB Connected ✅";
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Database connected successfully'
+        ]);
     } catch (\Exception $e) {
-        return $e->getMessage();
+        return response()->json([
+            'status' => false,
+            'message' => $e->getMessage()
+        ], 500);
     }
 });
