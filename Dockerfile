@@ -26,6 +26,9 @@ RUN composer install --no-dev --optimize-autoloader
 # Laravel writable directories
 RUN chmod -R 775 storage bootstrap/cache
 
+# Create Laravel public storage symlink
+RUN php artisan storage:link || true
+
 EXPOSE 10000
 
 CMD php artisan config:clear \
