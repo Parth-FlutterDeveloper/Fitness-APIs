@@ -16,6 +16,7 @@ return [
     'allowed_origins' => [
         'http://localhost:3000',
         'http://192.168.0.119:3000',
+        'https://fitnessapp-mscitproject-voq7-ktdmtho3u-heet1206s-projects.vercel.app'
     ],
 
     // For development you can allow all (optional)
