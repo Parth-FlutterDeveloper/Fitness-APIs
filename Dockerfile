@@ -1,6 +1,6 @@
 FROM php:8.2-cli
 
-# Install system dependencies + MySQL driver support
+# Install system dependencies + MySQL driver support + GD libraries
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -8,7 +8,12 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zip \
     default-mysql-client \
-    && docker-php-ext-install zip pdo pdo_mysql \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libwebp-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install zip pdo pdo_mysql gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
