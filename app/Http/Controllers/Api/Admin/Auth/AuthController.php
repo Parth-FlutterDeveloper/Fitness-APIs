@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Admin;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -54,7 +56,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email'
         ]);
-    
+
         $admin = Admin::where('admin_email', $request->email)->first();
 
         if (!$admin) {
@@ -71,16 +73,88 @@ class AuthController extends Controller
         $admin->save();
 
         try {
-            Mail::raw("Your Admin OTP is: $otp", function ($message) use ($admin) {
-                $message->to($admin->admin_email)
-                        ->subject('Admin Password Reset OTP');
-            });
+            $htmlContent = "
+                <div style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>
+                    <div style='max-width: 500px; margin: auto; background: #ffffff; padding: 25px; border-radius: 10px;'>
+                        <h2 style='color: #333; margin-bottom: 20px;'>Admin Password Reset Request</h2>
+
+                        <p style='font-size: 15px; color: #555;'>Hello Admin,</p>
+
+                        <p style='font-size: 15px; color: #555;'>
+                            We received a request to reset your password for your <b>Fitness App Admin Panel</b>.
+                        </p>
+
+                        <p style='font-size: 15px; color: #555;'>
+                            Please use the OTP below to continue:
+                        </p>
+
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <span style='display: inline-block; font-size: 32px; font-weight: bold; color: #ffffff; background-color: #2e86de; padding: 12px 24px; border-radius: 8px; letter-spacing: 4px;'>
+                                {$otp}
+                            </span>
+                        </div>
+
+                        <p style='font-size: 15px; color: #555;'>
+                            This OTP is valid for <b>6 minutes</b>.
+                        </p>
+
+                        <p style='font-size: 15px; color: #555;'>
+                            If you did not request this password reset, please ignore this email.
+                        </p>
+
+                        <hr style='margin: 25px 0; border: none; border-top: 1px solid #ddd;'>
+
+                        <p style='font-size: 12px; color: #888; margin-bottom: 5px;'>
+                            This is an automated email. Please do not reply.
+                        </p>
+
+                        <p style='font-size: 12px; color: #888;'>
+                            &copy; " . date('Y') . " Fitness API. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            ";
+
+            $response = Http::withHeaders([
+                'api-key' => env('BREVO_API_KEY'),
+                'accept' => 'application/json',
+                'content-type' => 'application/json',
+            ])->post('https://api.brevo.com/v3/smtp/email', [
+                'sender' => [
+                    'name' => env('MAIL_FROM_NAME', 'Fitness API'),
+                    'email' => env('MAIL_FROM_ADDRESS'),
+                ],
+                'to' => [
+                    [
+                        'email' => $admin->admin_email,
+                        'name' => 'Admin',
+                    ]
+                ],
+                'subject' => 'Admin Password Reset OTP',
+                'htmlContent' => $htmlContent,
+            ]);
+
+            if ($response->successful()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'OTP sent to admin email'
+                ]);
+            }
+
+            Log::error('Brevo API Error', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
 
             return response()->json([
-                'success' => true,
-                'message' => 'OTP sent to admin email'
-            ]);
+                'success' => false,
+                'message' => 'Mail sending failed',
+                'error' => $response->body()
+            ], 500);
+
         } catch (\Exception $e) {
+            Log::error('Forgot password mail exception: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Mail sending failed',
