@@ -71,9 +71,46 @@ class AuthController extends Controller
         $admin->save();
 
         // Send OTP Email
-        Mail::raw("Your Admin OTP is: $otp", function ($message) use ($admin) {
+        // --------------
+        
+        // Mail::raw("Your Admin OTP is: $otp", function ($message) use ($admin) {
+        //     $message->to($admin->admin_email)
+        //             ->subject('Admin Password Reset OTP');
+        // });
+
+        Mail::html("
+            <div style='font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;'>
+                <div style='max-width: 500px; margin: auto; background: #ffffff; padding: 20px; border-radius: 10px;'>
+                    
+                    <h2 style='color: #333;'>Password Reset Request</h2>
+
+                    <p>Hello Admin,</p>
+
+                    <p>We received a request to reset your password for your <b>Fitness App Admin Panel</b>.</p>
+
+                    <p>Please use the OTP below to proceed with resetting your password:</p>
+
+                    <h1 style='text-align: center; color: #2e86de;'>$otp</h1>
+
+                    <p>This OTP is valid for <b>6 minutes</b>.</p>
+
+                    <p>If you did not request a password reset, please ignore this email.</p>
+
+                    <hr>
+
+                    <p style='font-size: 12px; color: #888;'>
+                        This is an automated message. Please do not reply to this email.
+                    </p>
+
+                    <p style='font-size: 12px; color: #888;'>
+                        © " . date('Y') . " Fitness App. All rights reserved.
+                    </p>
+
+                </div>
+            </div>
+        ", function ($message) use ($admin) {
             $message->to($admin->admin_email)
-                    ->subject('Admin Password Reset OTP');
+                    ->subject('🔐 Admin Password Reset OTP');
         });
 
         return response()->json([
