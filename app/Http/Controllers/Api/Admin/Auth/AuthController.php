@@ -54,7 +54,7 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email'
         ]);
-
+    
         $admin = Admin::where('admin_email', $request->email)->first();
 
         if (!$admin) {
@@ -70,16 +70,23 @@ class AuthController extends Controller
         $admin->otp_expires_at = Carbon::now()->addMinutes(6);
         $admin->save();
 
-        // Send OTP Email
-        Mail::raw("Your Admin OTP is: $otp", function ($message) use ($admin) {
-            $message->to($admin->admin_email)
-                    ->subject('Admin Password Reset OTP');
-        });
+        try {
+            Mail::raw("Your Admin OTP is: $otp", function ($message) use ($admin) {
+                $message->to($admin->admin_email)
+                        ->subject('Admin Password Reset OTP');
+            });
 
-        return response()->json([
-            'success' => true,
-            'message' => 'OTP sent to admin email'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent to admin email'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mail sending failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
 
